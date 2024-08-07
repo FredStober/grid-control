@@ -509,6 +509,15 @@ sc_copy()
 				*)
 					sc_copy_connector "$1" "$2";;
 			esac;;
+		"davs://"*)
+			case "$2" in
+				"file://"*)
+					sc_try_copy sc_call "gfal-copy" "$GFAL_COPY_ARGS" "$1" "$2" || \
+					sc_try_copy sc_call "davix-get" -P grid "$1" "${2#file://}" || \
+					sc_fail "webdav_local_copy_failed";;
+				*)
+					sc_copy_connector "$1" "$2";;
+			esac;;
 		"file://"*)
 			if test ! -f "${1#file://}"; then
 				sc_fail "source_file_missing"
@@ -572,6 +581,10 @@ sc_copy()
 					sc_try_copy sc_call "srmcp" -2 -debug=true -streams_num=1 "$1" "$2" || \
 					sc_try_copy sc_call "arccp" "$1" "$2" || \
 					sc_fail "local_srm_copy_failed";;
+				"davs://"*)
+					sc_try_copy sc_call "gfal-copy" "$GFAL_COPY_ARGS" "$1" "$2" || \
+					sc_try_copy sc_call "davix-put" -P grid "${1#file://}" "$2" || \
+					sc_fail "local_webdav_copy_failed";;
 				"file://"*)
 					sc_try_copy sc_call "cp" "${1#file://}" "${2#file://}" || \
 					sc_fail "local_local_copy_failed";;

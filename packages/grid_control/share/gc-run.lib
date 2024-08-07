@@ -427,6 +427,11 @@ url_ls() {
 				esac
 			done
 			;;
+		"davs://"*)
+			LSCMD="`getcommand davix-ls`"
+			gc_check_bin "$LSCMD" 1>&2
+			eval "$LSCMD -P grid $1"
+			;;
 		"file://"*)
 			cd "${1#file://}" && ls -1d ${2:-*} && cd "$OLDPWD";;
 		*)	echo "Unsupported URL: $1" >&2 && fail 106;;
@@ -449,6 +454,9 @@ url_exists() {
 			print_and_eval "$EXCMD" "$1";;
 		"file://"*)
 			print_and_eval " " "test" "-s ${1#file://}";;
+		"davs://"*)
+			EXCMD="`getcommand davix-ls`"
+			print_and_eval "$EXCMD" "-P grid" "$1";;
 		*)
 			echo "Unsupported URL: $1" >&2 && fail 106;;
 	esac
@@ -472,6 +480,9 @@ url_rm() {
 				print_and_eval "$RM_CMD" "${RM_OPTS}" "$FILE";;
 			"file://"*)
 				print_and_eval " " "rm" "${FILE#file://}";;
+			"davs://"*)
+				RM_CMD="`getcommand davix-rm`"
+				print_and_eval "$RM_CMD" "-P grid" "$FILE";;
 			*)
 				echo "Unsupported URL: $FILE" >&2 && fail 106;;
 		esac
@@ -490,6 +501,8 @@ url_mkdir() {
 				print_and_eval "`getcommand edg-gridftp-mkdir`" "$FILE";;
 			"file://"*)
 				print_and_eval " " "mkdir" "-p" "${FILE#file://}";;
+			"davs://"*)
+				print_and_eval "`getcommand davix-mkdir`" "-P grid" "$FILE";;
 			*)
 				echo "Unsupported URL: $FILE" >&2 && fail 106;;
 		esac
@@ -578,6 +591,19 @@ url_copy_single() {
 					print_and_eval "url_copy_connector" "$1" "$2";;
 			esac;;
 
+		"davs://"*)
+			case "$2" in
+				"file://"*)
+					CPCMD="`getcommand davix-get gfal-copy`"
+					[ "$(basename $CPCMD)" == "davix-get" ] && DST_URL="${2#file://}" || DST_URL="$2"
+					[ "$(basename $CPCMD)" == "davix-get" ] && CPOPTS="-P grid" || CPOPTS=""
+					print_and_eval "$CPCMD" "$CPOPTS" "$1 $DST_URL";;
+				"davs://"*)
+					print_and_eval "`getcommand davix-cp gfal-copy`" "-P grid" "$1 $2";;
+				*)
+					echo "Unsupported copy from $1 to $2" >&2 && fail 106;;
+			esac;;
+
 		"file://"*)
 			case "$2" in
 				"rfio://"*)
@@ -586,6 +612,11 @@ url_copy_single() {
 					print_and_eval "`getcommand globus-url-copy`" "$1 $2";;
 				"srm://"*)
 					print_and_eval "url_copy_single_srm" "$1 $2";;
+				"davs://"*)
+					CPCMD="`getcommand davix-put gfal-copy`"
+					[ "$(basename $CPCMD)" == "davix-put" ] && SRC_URL="${1#file://}" || SRC_URL="$1"
+					[ "$(basename $CPCMD)" == "davix-put" ] && CPOPTS="-P grid" || CPOPTS=""
+					print_and_eval "$CPCMD" "$CPOPTS" "$SRC_URL $2";;
 				"file://"*)
 					print_and_eval "url_copy_single_local" "$1 $2";;
 				*)
@@ -613,7 +644,7 @@ url_copy() {
 	SOURCE_FILES=""
 	SOURCE_URL="$1"
 	case "$SOURCE_URL" in
-		"rfio://"* | "gsiftp://"* | "srm://"* | "dir://"*)
+		"rfio://"* | "gsiftp://"* | "srm://"* | "dir://"* | "davs://"*)
 			# copy from SE
 			SOURCE_URL="`echo "$SOURCE_URL" | sed -e 's@dir://@file://@'`"
 			if [[ "$FILENAMES" == *\** ]]; then
@@ -647,7 +678,7 @@ url_copy() {
 
 	TARGET_URL="$2"
 	case "$TARGET_URL" in
-		"rfio://"* | "gsiftp://"* | "srm://"* | "dir://"*)
+		"rfio://"* | "gsiftp://"* | "srm://"* | "dir://"* | "davs://"*)
 			# copy to SE
 			TARGET_PATTERN="${SE_OUTPUT_PATTERN:-@X@}"
 			TARGET_URL="`echo "$TARGET_URL" | sed -e 's@dir://@file://@'`"
