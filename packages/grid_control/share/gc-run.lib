@@ -483,8 +483,9 @@ url_rm() {
 			"file://"*)
 				print_and_eval " " "rm" "${FILE#file://}";;
 			"davs://"*)
-				RM_CMD="`getcommand davix-rm`"
-				print_and_eval "$RM_CMD" "-P grid" "$FILE";;
+				RM_CMD="`getcommand davix-rm gfal-rm`"
+				[ "$(basename $RM_CMD)" == "davix-rm" ] && RM_OPTS="-P grid" || RM_OPTS=""
+				print_and_eval "$RM_CMD" "$RM_OPTS" "$FILE";;
 			*)
 				echo "Unsupported URL: $FILE" >&2 && fail 106;;
 		esac
