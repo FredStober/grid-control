@@ -602,7 +602,9 @@ url_copy_single() {
 					[ "$(basename $CPCMD)" == "davix-get" ] && CPOPTS="-P grid" || CPOPTS=""
 					print_and_eval "$CPCMD" "$CPOPTS" "$1 $DST_URL";;
 				"davs://"*)
-					print_and_eval "`getcommand davix-cp gfal-copy`" "-P grid" "$1 $2";;
+					CPCMD="`getcommand davix-cp gfal-copy`"
+					[ "$(basename $CPCMD)" == "davix-get" ] && CPOPTS="-P grid" || CPOPTS=""
+					print_and_eval "$CPCMD" "$CPOPTS" "$1 $2";;
 				*)
 					echo "Unsupported copy from $1 to $2" >&2 && fail 106;;
 			esac;;
