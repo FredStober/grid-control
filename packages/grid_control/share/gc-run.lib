@@ -618,6 +618,7 @@ url_copy_single() {
 					CPCMD="`getcommand davix-put gfal-copy`"
 					[ "$(basename $CPCMD)" == "davix-put" ] && SRC_URL="${1#file://}" || SRC_URL="$1"
 					[ "$(basename $CPCMD)" == "davix-put" ] && CPOPTS="-P grid" || CPOPTS=""
+					[ "$(basename $CPCMD)" == "gfal-copy" ] && CPOPTS="--force"
 					print_and_eval "$CPCMD" "$CPOPTS" "$SRC_URL $2";;
 				"file://"*)
 					print_and_eval "url_copy_single_local" "$1 $2";;
