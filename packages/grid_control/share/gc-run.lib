@@ -428,9 +428,10 @@ url_ls() {
 			done
 			;;
 		"davs://"*)
-			LSCMD="`getcommand davix-ls`"
+			LSCMD="`getcommand davix-ls gfal-ls`"
 			gc_check_bin "$LSCMD" 1>&2
-			eval "$LSCMD -P grid $1"
+			[ "$(basename $LSCMD)" == "davix-ls" ] && LSCMD="$LSCMD -P grid"
+			eval "$LSCMD $1"
 			;;
 		"file://"*)
 			cd "${1#file://}" && ls -1d ${2:-*} && cd "$OLDPWD";;
@@ -455,8 +456,9 @@ url_exists() {
 		"file://"*)
 			print_and_eval " " "test" "-s ${1#file://}";;
 		"davs://"*)
-			EXCMD="`getcommand davix-ls`"
-			print_and_eval "$EXCMD" "-P grid" "$1";;
+			EXCMD="`getcommand davix-ls gfal-ls`"
+			[ "$(basename $EXCMD)" == "davix-ls" ] && EXCMD="$EXCMD -P grid"
+			print_and_eval "$EXCMD" "$1";;
 		*)
 			echo "Unsupported URL: $1" >&2 && fail 106;;
 	esac
